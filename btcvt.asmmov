@@ -1,0 +1,15 @@
+mov   cx, 10
+mov   bx, 0       ;init bx to 0
+
+mov   ax, 0100h   
+int   21h
+
+while:
+        cmp   ax, 13        ;is char = carriage return?
+        je    endwhile      ;if so, we're done
+        shl   bx, 1         ;multiplies bx by 2
+        and   al, 01h       ;convert character to binary
+        or    bl, al         ;"add" the low bit
+        int   21h
+        jmp   while
+endwhile
