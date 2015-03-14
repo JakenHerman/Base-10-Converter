@@ -8,7 +8,7 @@ mov   cx, len
 mov   ah, 0x40
 int   0x21
 
-msg db 'Enter a Base Ten Number: ', 0x0d, 0x0a
+msg db 'Enter a Base Ten Number: '
 len equ $ -msg
 
 mov   ah, 9
