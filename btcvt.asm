@@ -1,5 +1,11 @@
 org 0x100
 
+section .data
+   prompt   db   "Enter a Base 10 Number",13,10,'$'
+   len   equ $ -prompt
+
+
+section .text
 start:
    push   cs
    pop    ax
@@ -8,6 +14,11 @@ start:
 
    mov    di, string  ; es:di points to string
    cld                ; clear direction flag (so stosb incremements rather than decrements)
+
+
+   mov    ah, 9
+   mov    dx, prompt
+   int    21h
 
 read_loop:
    mov    ah, 0x01    ; Function 01h Read character from stdin with echo
@@ -20,8 +31,11 @@ read_done:
    mov    al, '$'
    stosb              ; 'Make sure the string is '$' terminated
 
-   mov    dx, string  ; ds:dx points to string
-   mov    ah, 0x09    ; Function 09h Print character string
+
+   mov    bx, string  ; store string in base register
+
+   mov    dx, bx      ; ds:dx points to bx
+   mov    ah, 9       ; Function 09h Print character string
    int    0x21
 
    ; Exit
@@ -30,4 +44,3 @@ read_done:
 
    string:
    times    255 db 0  ; reserve room for 255 characters
- 
