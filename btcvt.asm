@@ -7,29 +7,30 @@ prompt   db   "Enter a Base 10 Number",13,10,'$'
 len      equ $ -prompt
 
 
-
 section .text
 start:
 
     ;display prompt
-    mov   ah, 09
-    mov   dx, prompt
-    int   21h
 
+       mov   ah, 09
+       mov   dx, prompt
+       int   21h
 
-    mov   bx, 0        ;initialize bx to 0
-    mov   ax, 0100h
+    ;initialize registers to 0
+
+       mov   bx, 0
+       mov   ax, 0
 
     ;get user input
-    mov   ah, 0Ah
-    int   21h
+       mov   ds, ax
+       mov   ah, 0Ah
+       int   21h
 
+    ;output user input code
+       mov   ah, 09
+       mov   dx, ds
+       int   21h
 
-while:
-    cmp   ax, 13        ;is char = carriage return?
-    jmp   endwhile      ;if so, we're done
-    mov   bx, ax        ;save char to bx
-    int   21h           ;get another char
-    loop  while
-endwhile:
-    ret                 ;end subroutine
+    ;end program
+       mov   ah, 4Ch
+       int   21h
