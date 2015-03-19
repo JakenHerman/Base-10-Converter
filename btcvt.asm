@@ -1,36 +1,31 @@
-org 100h
+org 0x100
 
-
-section .data
-
-prompt   db   "Enter a Base 10 Number",13,10,'$'
-len      equ $ -prompt
-
-
-section .text
 start:
+push cs
+pop ax
+mov ds, ax
+mov es, ax; make sure ds = es = cs
 
-    ;display prompt
+mov di, string ; es:di points to string
+cld ; clear direction flag (so stosb incremements rather than decrements)
+read_loop:
+mov ah, 0x01 ; Function 01h Read character from stdin with echo
+int 0x21
+cmp al, 0x0D ; character is carriage return?
+je read_done ; yes? exit the loop
+stosb ; store the character at es:di and increment di
+jmp read_loop ; loop again
+read_done:
+mov al, '$'
+stosb ; 'Make sure the string is '$' terminated
 
-       mov   ah, 09
-       mov   dx, prompt
-       int   21h
+mov dx, string ; ds:dx points to string
+mov ah, 0x09 ; Function 09h Print character string
+int 0x21
 
-    ;initialize registers to 0
+; Exit
+mov ax, 0x4c00
+int 0x21
 
-       mov   bx, 0
-       mov   ax, 0
-
-    ;get user input
-       mov   ds, ax
-       mov   ah, 0Ah
-       int   21h
-
-    ;output user input code
-       mov   ah, 09
-       mov   dx, ds
-       int   21h
-
-    ;end program
-       mov   ah, 4Ch
-       int   21h
+string:
+times 255 db 0 ; reserve room for 255 characters
