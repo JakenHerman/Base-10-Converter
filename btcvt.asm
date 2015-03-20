@@ -3,6 +3,7 @@ org	100h
 section .data
    prompt1: db	"Please enter a decimal number: $"
    prompt2: db	0Dh,0Ah, "In binary, the number you entered is:    $"
+   prompt4: db	0Dh,0Ah, "In octal, the number you entered is:    $"
    prompt3: db	0Dh,0Ah, "In hexadecimal, the number you entered is:    $"
 
 section .text
@@ -50,8 +51,35 @@ print:
 	int	    21h		      ; print it
 	loop	  top2		    ; loop until done
 
-; output it again, only this time in hexadecimal
+
+;output in octal
 out2:
+   mov    ah, 9       ;print octal output label
+   mov    dx,prompt4
+   int    21h
+
+; for 12 times do this:
+	mov	    cx, 12		  ; loop counter
+
+top2:
+  rol    	bx,1		    ; rotate msb into CF
+	jc    	one		      ; CF = 1?
+	mov    	dl,'0'		  ; no, set up to print a 0
+	jmp	    print		    ; now print
+one:
+  mov    	dl,'1'		  ; printing a 1
+print:
+  mov   	ah,2		    ; print char fcn
+	int	    21h		      ; print it
+	loop	  top2		    ; loop until done
+
+
+;end octal
+
+
+
+; output it again, only this time in hexadecimal
+out3:
 	mov	    ah,9		    ; print hex output label
 	mov	    dx,prompt3
 	int 	  21h
@@ -64,16 +92,16 @@ top3:
 	mov	    dl,bl		    ; put a copy in dl
 	and	    dl,0Fh		  ; we only want the lower 4 bits
 	cmp	    dl,9		    ; is it in [0-9]?
-	ja	    AtoF2	    	; if not, process [A-F]
+	ja	    AF	    	  ; if not, process [A-F]
 	or	    dl,30h		  ; convert 0-9 to '0'-'9'
 	jmp	    print2		  ; now print
 
-AtoF2:
+AF:
   add   	dl,55		    ; convert 10-15 to 'A'-'F'
 
 print2:
-  mov	    ah,2	    	; print char fcn
-	int	    21h		      ; print it
+  mov	    ah,2	    	; print char
+	int	    21h
 	loop	  top3	     	; loop until done
 
 Exit:
