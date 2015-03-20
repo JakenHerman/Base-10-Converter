@@ -1,46 +1,82 @@
-org 0x100
+org	100h
 
 section .data
-   prompt   db   "Enter a Base 10 Number",13,10,'$'
-   len   equ $ -prompt
-
+   prompt1: db	"Please enter a decimal number: $"
+   prompt2: db	0Dh,0Ah, "In binary, the number you entered is:    $"
+   prompt3: db	0Dh,0Ah, "In hexadecimal, the number you entered is:    $"
 
 section .text
 start:
-   push   cs
-   pop    ax
-   mov    ds, ax
-   mov    es, ax      ; make sure ds = es = cs
+	mov	    ah,9		    ; print prompt
+	mov	    dx,prompt1
+	int 	  21h
 
-   mov    di, string  ; es:di points to string
-   cld                ; clear direction flag (so stosb incremements rather than decrements)
+; input base 10 value
+	mov   	bx,0	      ; bx holds input value
+	mov	    ah,1		    ; input char function
+	int	    21h		      ; read char into al
+top1:				          ; while (char != CR)
+	cmp	    al,13		    ; is char = CR?
+	je	    out1		    ; yes?  finished with input
+	and	    ax,000Fh	  ; convert from ASCII to base 10 value
+	push	  ax		      ; and save it on stack
+	mov	    ax,10		    ; set up to multiply bx by 10
+	mul	    bx		      ; dx:ax = bx*10
+	pop   	bx		      ; saved value in bx
+	add	    bx,ax		    ; bx = old bx*10 + new digit
 
+  mov	    ah,1		    ; input char function
+	int	    21h		      ; read next character
+	jmp	    top1		    ; loop until done
 
-   mov    ah, 9
-   mov    dx, prompt
-   int    21h
+; now, output it in binary
+out1:
+	mov	    ah,9		    ; print binary output label
+	mov	    dx,prompt2
+	int     21h
 
-read_loop:
-   mov    ah, 0x01    ; Function 01h Read character from stdin with echo
-   int    0x21
-   cmp    al, 0x0D    ; character is carriage return?
-   je     read_done   ; yes? exit the loop
-   stosb              ; store the character at es:di and increment di
-   jmp    read_loop   ; loop again
-read_done:
-   mov    al, '$'
-   stosb              ; 'Make sure the string is '$' terminated
+; for 16 times do this:
+	mov	    cx, 16		  ; loop counter
 
+top2:
+  rol    	bx,1		    ; rotate msb into CF
+	jc    	one		      ; CF = 1?
+	mov    	dl,'0'		  ; no, set up to print a 0
+	jmp	    print		    ; now print
+one:
+  mov    	dl,'1'		  ; printing a 1
+print:
+  mov   	ah,2		    ; print char fcn
+	int	    21h		      ; print it
+	loop	  top2		    ; loop until done
 
-   mov    bx, string  ; store string in base register
+; output it again, only this time in hexadecimal
+out2:
+	mov	    ah,9		    ; print hex output label
+	mov	    dx,prompt3
+	int 	  21h
 
-   mov    dx, bx      ; ds:dx points to bx
-   mov    ah, 9       ; Function 09h Print character string
-   int    0x21
+; for 4 times do this:
+	mov    	cx, 4		    ; loop counter
 
-   ; Exit
-   mov    ax, 0x4c00
-   int    0x21
+top3:
+  rol	    bx,4		    ; rotate top nybble into the bottom
+	mov	    dl,bl		    ; put a copy in dl
+	and	    dl,0Fh		  ; we only want the lower 4 bits
+	cmp	    dl,9		    ; is it in [0-9]?
+	ja	    AtoF2	    	; if not, process [A-F]
+	or	    dl,30h		  ; convert 0-9 to '0'-'9'
+	jmp	    print2		  ; now print
 
-   string:
-   times    255 db 0  ; reserve room for 255 characters
+AtoF2:
+  add   	dl,55		    ; convert 10-15 to 'A'-'F'
+
+print2:
+  mov	    ah,2	    	; print char fcn
+	int	    21h		      ; print it
+	loop	  top3	     	; loop until done
+
+Exit:
+	mov     ah,04Ch     ;DOS function: Exit program
+	mov     al,0        ;Return exit code value
+	int     21h         ;Call DOS.  Terminate program
